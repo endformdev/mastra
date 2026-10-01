@@ -35,5 +35,5 @@ export default defineConfig({
     },
   ],
 
-  webServer: webservers,
+  webServer: process.env.E2E_REMOTE_APP === 'true' ? undefined : webservers,
 });

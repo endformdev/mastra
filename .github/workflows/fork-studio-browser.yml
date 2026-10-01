@@ -17,7 +17,8 @@ jobs:
       id-token: write
     env:
       TURBO_CACHE: local:rw
-      E2E_APP_POOL_SIZE: '16'
+      E2E_REMOTE_APP: 'true'
+      E2E_CONCURRENCY: '40'
 
     steps:
       - name: Checkout repo
@@ -53,6 +54,10 @@ jobs:
 
       - name: Verify application isolation
         run: node --test packages/playground/e2e/isolation-server.test.mjs packages/playground/e2e/isolation-server.integration.test.mjs
+
+      - name: Prepare remote Studio assets
+        working-directory: ./packages/playground/e2e
+        run: node prepare-remote-app.mjs
 
       - name: Test E2E
         working-directory: ./packages/playground

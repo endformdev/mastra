@@ -9,6 +9,7 @@ const SESSION_ANNOTATION = 'mastra-e2e-session';
 // Resolve the annotation per call rather than storing mutable process-wide test state.
 const originalFetch = globalThis.fetch;
 globalThis.fetch = (input, init) => {
+  if (process.env.E2E_REMOTE_APP === 'true') return originalFetch(input, init);
   const url = new URL(input instanceof Request ? input.url : String(input));
   if (url.origin !== BASE_URL || url.pathname.startsWith('/__e2e/')) return originalFetch(input, init);
   const session = base.info().annotations.find(annotation => annotation.type === SESSION_ANNOTATION)?.description;
@@ -18,7 +19,7 @@ globalThis.fetch = (input, init) => {
   return originalFetch(input, { ...init, headers });
 };
 
-export const test = base.extend<{ isolatedSession: string }>({
+const isolatedTest = base.extend<{ isolatedSession: string }>({
   isolatedSession: [
     async ({ browser }, use, testInfo) => {
       const session = randomUUID();
@@ -48,5 +49,7 @@ export const test = base.extend<{ isolatedSession: string }>({
     await use({ ...extraHTTPHeaders, [SESSION_HEADER]: isolatedSession });
   },
 });
+
+export const test = process.env.E2E_REMOTE_APP === 'true' ? (await import('./remote-test')).remoteTest : isolatedTest;
 
 export { expect } from '@playwright/test';
