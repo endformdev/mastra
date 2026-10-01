@@ -62,7 +62,6 @@ export const mastra = new Mastra({
     contentFilterProcessor,
   },
   server: {
-    ...(process.env.E2E_GATEWAY_PORT ? { studioPort: Number(process.env.E2E_GATEWAY_PORT) } : {}),
     ...(process.env.E2E_STUDIO_BASE_PATH ? { studioBase: process.env.E2E_STUDIO_BASE_PATH } : {}),
     apiRoutes: [
       // Seeds a weather-agent thread with `count` user messages ("seed message N",
