@@ -1,0 +1,67 @@
+name: Fork Studio browser tests
+
+on:
+  pull_request:
+    branches: [main, 'codex/mastra-playwright-baseline']
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  e2e-kitchen-sink:
+    name: E2E kitchen-sink (${{ matrix.shard }}/${{ strategy.job-total }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    permissions:
+      contents: read
+    env:
+      TURBO_CACHE: local:rw
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@e8d4307400f9427dba7cb98e488d6ab85f1cec5f
+        timeout-minutes: 20
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Record runner resources
+        run: |
+          nproc
+          free -h
+
+      - name: Setup pnpm and Node.js
+        uses: ./.github/actions/setup-pnpm-node
+
+      - name: Build
+        run: >-
+          pnpm turbo
+          --filter "@mastra/core"
+          --filter "mastra"
+          --filter "@mastra/editor"
+          --filter "@mastra/memory"
+          --filter "@mastra/libsql"
+          --filter "@mastra/loggers"
+          --filter "@mastra/mcp"
+          --filter "@internal/playground"
+          build
+
+      - name: Setup e2e project dependencies
+        working-directory: ./packages/playground
+        run: pnpm test:e2e:setup
+
+      - name: Test E2E
+        working-directory: ./packages/playground
+        run: pnpm exec playwright test -c e2e/playwright.config.ts --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: studio-playwright-${{ matrix.shard }}
+          path: packages/playground/test-results/
+          if-no-files-found: ignore
+
