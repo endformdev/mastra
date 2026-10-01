@@ -24,7 +24,7 @@ if (PORT) {
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
   workers: 1,
@@ -32,7 +32,7 @@ export default defineConfig({
 
   use: {
     baseURL: BASE_URL,
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     reducedMotion: 'reduce',
   },
 
