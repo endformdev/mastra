@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../__utils__/test';
 import type { Page } from '@playwright/test';
 import { resetStorage } from '../../__utils__/reset-storage';
 
@@ -33,7 +33,7 @@ function observeBrowserTraffic(page: Page): ObservedTraffic {
   return observed;
 }
 
-test.describe('Browser stream WebSocket gating', () => {
+test.describe('Browser stream WebSocket gating', { tag: '@streaming' }, () => {
   test.afterEach(async () => {
     await resetStorage();
   });

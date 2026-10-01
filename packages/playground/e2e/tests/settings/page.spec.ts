@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../__utils__/test';
 import { expectCurrentBreadcrumb } from '../__utils__/route-header';
 
 test.describe('Settings page', () => {

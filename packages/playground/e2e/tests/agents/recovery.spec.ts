@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../__utils__/test';
 
 // A missing agent must not strand users in a dead chat. Recovery either reloads
 // the resource from the server or returns to the registered agents list.

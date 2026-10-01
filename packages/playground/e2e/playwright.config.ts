@@ -7,8 +7,8 @@ const webservers: PlaywrightTestConfig['webServer'] = [
   {
     // UI tests use route interception for auth mocking - no server auth needed
     // Server-side permission tests are in server-adapters/hono
-    command: `pnpm -C ./kitchen-sink dev`,
-    url: `http://localhost:4111`,
+    command: 'pnpm -C ./kitchen-sink dev',
+    url: 'http://localhost:4111',
     timeout: 120_000,
   },
 ];
@@ -16,15 +16,16 @@ const webservers: PlaywrightTestConfig['webServer'] = [
 if (PORT) {
   webservers.push({
     command: `echo "App is running on :${PORT}"`,
-    url: `http://localhost:${PORT}`,
+    url: BASE_URL,
     timeout: 120_000,
     reuseExistingServer: true,
   });
 }
 
 export default defineConfig({
+  tsconfig: '../tsconfig.json',
   testDir: './tests',
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
   workers: 1,
@@ -32,7 +33,7 @@ export default defineConfig({
 
   use: {
     baseURL: BASE_URL,
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     reducedMotion: 'reduce',
   },
 
@@ -43,5 +44,5 @@ export default defineConfig({
     },
   ],
 
-  webServer: webservers,
+  webServer: process.env.E2E_REMOTE_APP === 'true' ? undefined : webservers,
 });

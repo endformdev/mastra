@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../__utils__/test';
 import { resetStorage } from '../../__utils__/reset-storage';
 
 // These tests cover the code-mode override product behavior:
@@ -13,7 +13,7 @@ test.describe('code-mode agent override', () => {
     await resetStorage();
   });
 
-  test.describe('when an editable code-mode agent is opened', () => {
+  test.describe('when an editable code-mode agent is opened', { tag: '@filesystem' }, () => {
     test('editable local code agent saves to filesystem and can download JSON', async ({ page, request }) => {
       await page.goto('/agents/code-override-editable/editor');
 

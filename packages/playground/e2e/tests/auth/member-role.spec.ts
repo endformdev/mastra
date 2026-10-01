@@ -11,7 +11,7 @@
  * - Cannot access admin settings
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../__utils__/test';
 import { setupMemberAuth, setupMockAuth } from '../__utils__/auth';
 import { resetStorage } from '../__utils__/reset-storage';
 import { expectCurrentBreadcrumb } from '../__utils__/route-header';

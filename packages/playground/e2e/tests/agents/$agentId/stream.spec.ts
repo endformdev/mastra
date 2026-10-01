@@ -1,5 +1,5 @@
 import type { Page, BrowserContext } from '@playwright/test';
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../__utils__/test';
 import { resetStorage } from '../../__utils__/reset-storage';
 import { selectFixture } from '../../__utils__/select-fixture';
 
@@ -45,7 +45,7 @@ async function assertToolStream(page: Page) {
   await expect(page.getByTestId('tool-result')).toContainText(`"location":`);
 }
 
-test.describe('Agent chat streaming', () => {
+test.describe('Agent chat streaming', { tag: '@streaming' }, () => {
   test.beforeEach(async ({ browser }) => {
     await resetStorage();
     context = await browser.newContext();

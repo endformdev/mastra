@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../__utils__/test';
 import { resetStorage } from '../../__utils__/reset-storage';
 import { expectBreadcrumbLink } from '../../__utils__/route-header';
 

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../__utils__/test';
 import type { Page } from '@playwright/test';
 import { resetStorage } from '../__utils__/reset-storage';
 import { selectFixture } from '../__utils__/select-fixture';

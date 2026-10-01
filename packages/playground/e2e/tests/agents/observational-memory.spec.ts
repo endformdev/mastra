@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../__utils__/test';
 import type { Page } from '@playwright/test';
 import { resetStorage } from '../__utils__/reset-storage';
 import { selectFixture } from '../__utils__/select-fixture';
@@ -41,7 +41,7 @@ async function openMemorySidebar(page: Page) {
   await expect(memoryCard).toHaveAttribute('aria-pressed', 'true');
 }
 
-test.describe('Observational Memory - Behavior Tests', () => {
+test.describe('Observational Memory - Behavior Tests', { tag: '@streaming' }, () => {
   test.afterEach(async () => {
     await resetStorage();
   });
@@ -352,7 +352,7 @@ test.describe('Observational Memory - Behavior Tests', () => {
   });
 });
 
-test.describe('Observational Memory - Edge Cases', () => {
+test.describe('Observational Memory - Edge Cases', { tag: '@streaming' }, () => {
   test.afterEach(async () => {
     await resetStorage();
   });

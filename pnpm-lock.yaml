@@ -5893,6 +5893,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^5.2.0
         version: 5.2.0(vite@7.3.6(@types/node@22.19.15)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.23.1)(yaml@2.9.0))
+      endform:
+        specifier: 0.81.1
+        version: 0.81.1
       eslint-plugin-react-hooks:
         specifier: ^7.1.1
         version: 7.1.1(eslint@10.7.0(jiti@2.7.0)(supports-color@10.2.2))
@@ -25457,6 +25460,40 @@ packages:
 
   end-of-stream@1.4.5:
     resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
+
+  endform-darwin-arm64@0.81.1:
+    resolution: {integrity: sha512-duBYoWEdBEdk9UHUrUA9ZYP3RqxXGrjS6plkrwFmdnhFAph+6gopXUljw6d1pJB0j/kP25LPBEPK+5iQ1rx5ng==}
+    cpu: [arm64]
+    os: [darwin]
+
+  endform-darwin-x86@0.81.1:
+    resolution: {integrity: sha512-an6GjutD6PZAF5PLlWIEWTMOkLZx5LrVZ4OmukL1eQd8WWITsFi42VGfxYpYJFXe7GdQaCDrEaJSLCdsL0Iqyw==}
+    cpu: [x64]
+    os: [darwin]
+
+  endform-linux-arm64@0.81.1:
+    resolution: {integrity: sha512-gxhTi3jsRtzA4ZhibK4idNAcp0cb0V4idZkJxLCq9ao8FUMUiiVHhjhtiFNO7eUGgsA8+DfFnRdiPa2zTePWjQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  endform-linux-x86@0.81.1:
+    resolution: {integrity: sha512-aXZP8Wds4bzcCRMFOL64/B7jQLIP7ECrDW8H6vjl6TZTjg7lipfPLams8R2RDigRUjB5i8RDwuusoeOMvYf2gA==}
+    cpu: [x64]
+    os: [linux]
+
+  endform-win32-arm64@0.81.1:
+    resolution: {integrity: sha512-ckWkuUgGj9bPzMfTJOLX2n6YgWjPxhJWtcKMQX6it5OhB8bDjHA2vnhOowPZlLoPwLtjT3NaEUnh81NdHFVhDw==}
+    cpu: [arm64]
+    os: [win32]
+
+  endform-win32-x86@0.81.1:
+    resolution: {integrity: sha512-I5cXm6huxhcs5ZTH+U4O0Ehx6kvpKH4HVATPT5y4C+GliAZVY+rcrB2NBIl+61xWsjHmoC6tkn+HX6lzKJlCGw==}
+    cpu: [x64]
+    os: [win32]
+
+  endform@0.81.1:
+    resolution: {integrity: sha512-dLWKcpN6FfIEcxzzlJkBBDLcxll7xkS36tuKadt13lM8ZwbcmytgLHHgJ1USLtLuUWCrsPq172qtiZHN3sufXQ==}
+    hasBin: true
 
   engine.io-client@6.6.6:
     resolution: {integrity: sha512-iY6QdftLQ9pyiPoX082bpf/u1UewnOaJrtJIF9T0++QB34lZrj0uP+Q/bj8AlUsAxqhnkTV2BS8SBZSxOmoV5Q==}
@@ -51623,6 +51660,33 @@ snapshots:
   end-of-stream@1.4.5:
     dependencies:
       once: 1.4.0
+
+  endform-darwin-arm64@0.81.1:
+    optional: true
+
+  endform-darwin-x86@0.81.1:
+    optional: true
+
+  endform-linux-arm64@0.81.1:
+    optional: true
+
+  endform-linux-x86@0.81.1:
+    optional: true
+
+  endform-win32-arm64@0.81.1:
+    optional: true
+
+  endform-win32-x86@0.81.1:
+    optional: true
+
+  endform@0.81.1:
+    optionalDependencies:
+      endform-darwin-arm64: 0.81.1
+      endform-darwin-x86: 0.81.1
+      endform-linux-arm64: 0.81.1
+      endform-linux-x86: 0.81.1
+      endform-win32-arm64: 0.81.1
+      endform-win32-x86: 0.81.1
 
   engine.io-client@6.6.6(bufferutil@4.1.0)(supports-color@10.2.2):
     dependencies:

@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../__utils__/test';
 import { resetStorage } from '../../__utils__/reset-storage';
 import { topLevelWorkflowNodes } from '../../__utils__/workflow-nodes';
 

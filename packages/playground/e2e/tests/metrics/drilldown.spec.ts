@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../__utils__/test';
 import type { Locator, Page } from '@playwright/test';
 import { resetStorage } from '../__utils__/reset-storage';
 
