@@ -20,15 +20,24 @@ globalThis.fetch = (input, init) => {
 
 export const test = base.extend<{ isolatedSession: string }>({
   isolatedSession: [
-    async ({}, use, testInfo) => {
+    async ({ browser }, use, testInfo) => {
       const session = randomUUID();
       const headers = { [SESSION_HEADER]: session };
       const response = await originalFetch(`${BASE_URL}/__e2e/lease`, { method: 'POST', headers });
       if (!response.ok) throw new Error(`Could not lease kitchen-sink: ${response.status}`);
       testInfo.annotations.push({ type: SESSION_ANNOTATION, description: session });
+      // Existing streaming/IME specs create contexts explicitly. Browser is a
+      // worker fixture, so patch only for this test attempt and restore on exit.
+      const newContext = browser.newContext.bind(browser);
+      browser.newContext = options =>
+        newContext({
+          ...options,
+          extraHTTPHeaders: { ...options?.extraHTTPHeaders, [SESSION_HEADER]: session },
+        });
       try {
         await use(session);
       } finally {
+        browser.newContext = newContext;
         const release = await originalFetch(`${BASE_URL}/__e2e/lease`, { method: 'DELETE', headers });
         if (!release.ok) throw new Error(`Could not reset kitchen-sink: ${release.status}`);
       }

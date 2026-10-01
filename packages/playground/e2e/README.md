@@ -7,6 +7,11 @@ and installing `kitchen-sink` dependencies:
 E2E_APP_POOL_SIZE=8 npx endform@latest test --organization-id 2G1ZCj7X
 ```
 
+`pnpm --filter @internal/playground test:e2e` uses Endform as the default runner.
+`test:e2e:endform` runs the same command without dependency installation.
+The previous native runner remains available as `test:e2e:playwright`, including
+its separate Studio base-path test; that extra test is outside this benchmark.
+
 The fork workflow runs this command once, without a shard matrix. Endform schedules
 all 335 Chromium tests. `E2E_APP_POOL_SIZE` controls both application capacity and
 the Endform concurrency limit (default 4, supported range 1–16).

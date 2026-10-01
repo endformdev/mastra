@@ -55,8 +55,8 @@ jobs:
         run: node --test packages/playground/e2e/isolation-server.test.mjs
 
       - name: Test E2E
-        working-directory: ./packages/playground/e2e
-        run: npx endform@latest test --organization-id 2G1ZCj7X
+        working-directory: ./packages/playground
+        run: pnpm test:e2e:endform
 
       - name: Upload test artifacts
         if: always()

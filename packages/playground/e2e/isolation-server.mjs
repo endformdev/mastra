@@ -152,17 +152,21 @@ export async function startIsolatedApps({ size, port, kitchenSink }) {
       await mkdir(join(output, 'public'), { recursive: true });
       const backend = { port: port + index + 1, child: undefined };
       const start = async () => {
-        backend.child = spawn(process.execPath, [join(output, 'index.mjs')], {
-          cwd: join(output, 'public'),
-          env: {
-            ...process.env,
-            PORT: String(backend.port),
-            E2E_GATEWAY_PORT: String(port),
-            MASTRA_DEV: 'true',
-            MASTRA_PROJECT_ROOT: join(directory, '.mastra'),
+        backend.child = spawn(
+          process.execPath,
+          [join(dirname(fileURLToPath(import.meta.url)), 'isolated-app.mjs'), join(output, 'index.mjs')],
+          {
+            cwd: join(output, 'public'),
+            env: {
+              ...process.env,
+              PORT: String(backend.port),
+              E2E_GATEWAY_PORT: String(port),
+              MASTRA_DEV: 'true',
+              MASTRA_PROJECT_ROOT: join(directory, '.mastra'),
+            },
+            stdio: ['ignore', 'inherit', 'inherit'],
           },
-          stdio: ['ignore', 'inherit', 'inherit'],
-        });
+        );
         await waitForServer(backend.port, backend.child);
       };
       backend.reset = async () => {
