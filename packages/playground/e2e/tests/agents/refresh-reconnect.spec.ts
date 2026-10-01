@@ -3,7 +3,7 @@ import { expect, test } from '../__utils__/test';
 const chatPath = '/agents/weather-agent/threads/new';
 const agentDetails = /\/api\/agents\/weather-agent(?:\?.*)?$/;
 
-test.describe('Studio refresh connection', () => {
+test.describe('Studio refresh connection', { tag: '@streaming' }, () => {
   for (const hasHandshake of [true, false]) {
     test.describe('when the server restarts while disconnected', () => {
       test(`recovers the stale chat ${hasHandshake ? 'after an established connection' : 'before the first handshake'} without a broadcast`, async ({

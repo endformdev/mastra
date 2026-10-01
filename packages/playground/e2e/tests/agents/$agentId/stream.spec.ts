@@ -45,7 +45,7 @@ async function assertToolStream(page: Page) {
   await expect(page.getByTestId('tool-result')).toContainText(`"location":`);
 }
 
-test.describe('Agent chat streaming', () => {
+test.describe('Agent chat streaming', { tag: '@streaming' }, () => {
   test.beforeEach(async ({ browser }) => {
     await resetStorage();
     context = await browser.newContext();

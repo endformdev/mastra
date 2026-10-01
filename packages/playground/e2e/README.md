@@ -4,7 +4,7 @@ Run the existing suite from this directory after building the workspace dependen
 and installing `kitchen-sink` dependencies:
 
 ```sh
-E2E_APP_POOL_SIZE=8 npx endform@latest test --organization-id 2G1ZCj7X
+E2E_APP_POOL_SIZE=16 npx endform@latest test --organization-id 2G1ZCj7X
 ```
 
 `pnpm --filter @internal/playground test:e2e` uses Endform as the default runner.
@@ -15,6 +15,10 @@ its separate Studio base-path test; that extra test is outside this benchmark.
 The fork workflow runs this command once, without a shard matrix. Endform schedules
 all 335 Chromium tests. `E2E_APP_POOL_SIZE` controls both application capacity and
 the Endform concurrency limit (default 4, supported range 1–16).
+Endform also caps `@streaming` tests at four concurrent attempts and the
+`@filesystem` test at one. These are scheduling limits, not test filters; all
+tests and retries still execute. The streaming cap leaves application capacity
+for ordinary UI cases rather than letting long streams occupy every instance.
 
 Tests import `test` and `expect` from `tests/__utils__/test`. Its automatic fixture
 leases one kitchen-sink instance for the whole test attempt, including hooks. The
@@ -42,7 +46,12 @@ Verify the lease and reset behavior before browser experiments:
 
 ```sh
 node --test isolation-server.test.mjs
+node --test isolation-server.integration.test.mjs
 ```
+
+The integration check starts real kitchen-sink instances, seeds the same thread
+ID with different data concurrently, resets one lease, and verifies that the
+other lease's data survives and the first instance's source tree is restored.
 
 For targeted experiments, use Endform's normal Playwright file or grep filters;
 do not replace full-suite verification with a smaller passing subset. Changing

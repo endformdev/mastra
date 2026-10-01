@@ -33,7 +33,7 @@ function observeBrowserTraffic(page: Page): ObservedTraffic {
   return observed;
 }
 
-test.describe('Browser stream WebSocket gating', () => {
+test.describe('Browser stream WebSocket gating', { tag: '@streaming' }, () => {
   test.afterEach(async () => {
     await resetStorage();
   });

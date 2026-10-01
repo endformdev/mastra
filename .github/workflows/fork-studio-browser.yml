@@ -17,7 +17,7 @@ jobs:
       id-token: write
     env:
       TURBO_CACHE: local:rw
-      E2E_APP_POOL_SIZE: '8'
+      E2E_APP_POOL_SIZE: '16'
 
     steps:
       - name: Checkout repo
@@ -52,7 +52,7 @@ jobs:
         run: pnpm install --dir ./e2e/kitchen-sink --frozen-lockfile
 
       - name: Verify application isolation
-        run: node --test packages/playground/e2e/isolation-server.test.mjs
+        run: node --test packages/playground/e2e/isolation-server.test.mjs packages/playground/e2e/isolation-server.integration.test.mjs
 
       - name: Test E2E
         working-directory: ./packages/playground

@@ -13,7 +13,7 @@ test.describe('code-mode agent override', () => {
     await resetStorage();
   });
 
-  test.describe('when an editable code-mode agent is opened', () => {
+  test.describe('when an editable code-mode agent is opened', { tag: '@filesystem' }, () => {
     test('editable local code agent saves to filesystem and can download JSON', async ({ page, request }) => {
       await page.goto('/agents/code-override-editable/editor');
 

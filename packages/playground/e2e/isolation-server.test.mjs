@@ -58,4 +58,7 @@ test('concurrent leases isolate writes and resets, and queued tests reuse a clea
   assert.equal((await fetch(url, { headers: headers('a') })).status, 409);
   assert.equal((await release('c')).status, 200);
   assert.equal((await release('b')).status, 200);
+  assert.equal(gateway.isolationMetrics.maxActive, 2);
+  assert.equal(gateway.isolationMetrics.leases, 3);
+  assert.equal(gateway.isolationMetrics.resets, 3);
 });

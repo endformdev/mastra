@@ -41,7 +41,7 @@ async function openMemorySidebar(page: Page) {
   await expect(memoryCard).toHaveAttribute('aria-pressed', 'true');
 }
 
-test.describe('Observational Memory - Behavior Tests', () => {
+test.describe('Observational Memory - Behavior Tests', { tag: '@streaming' }, () => {
   test.afterEach(async () => {
     await resetStorage();
   });
@@ -352,7 +352,7 @@ test.describe('Observational Memory - Behavior Tests', () => {
   });
 });
 
-test.describe('Observational Memory - Edge Cases', () => {
+test.describe('Observational Memory - Edge Cases', { tag: '@streaming' }, () => {
   test.afterEach(async () => {
     await resetStorage();
   });

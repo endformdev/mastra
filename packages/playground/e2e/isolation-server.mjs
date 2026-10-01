@@ -14,12 +14,13 @@ export function createGateway(backends) {
   const sessions = new Map();
   const available = [...backends];
   const waiting = [];
+  const metrics = { leases: 0, maxActive: 0, resets: 0, resetMilliseconds: 0 };
   const server = createServer(async (req, res) => {
     const send = (status, data) => {
       res.writeHead(status, { 'content-type': 'application/json' });
       res.end(JSON.stringify(data));
     };
-    if (req.url === '/__e2e/health') return send(200, { instances: backends.length });
+    if (req.url === '/__e2e/health') return send(200, { instances: backends.length, ...metrics });
     if (req.url === '/__e2e/lease' && req.method === 'POST') {
       const session = req.headers[SESSION_HEADER];
       if (typeof session !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(session)) {
@@ -28,6 +29,8 @@ export function createGateway(backends) {
       if (sessions.has(session)) return send(409, { error: 'Session already leased' });
       const allocate = backend => {
         sessions.set(session, backend);
+        metrics.leases++;
+        metrics.maxActive = Math.max(metrics.maxActive, sessions.size);
         send(201, { session });
       };
       const backend = available.shift();
@@ -50,7 +53,10 @@ export function createGateway(backends) {
       // Reset after every attempt, even when a test has no afterEach reset or fails.
       // Filesystem changes require a fresh process/source tree as well as a database reset.
       try {
+        const started = Date.now();
         await backend.reset();
+        metrics.resets++;
+        metrics.resetMilliseconds += Date.now() - started;
         const pending = waiting.shift();
         if (pending) pending.allocate(backend);
         else available.push(backend);
@@ -98,7 +104,7 @@ export function createGateway(backends) {
     socket.on('error', () => upstream.destroy());
     socket.on('close', () => upstream.destroy());
   });
-  return server;
+  return Object.assign(server, { isolationMetrics: metrics });
 }
 
 async function waitForServer(port, child) {
@@ -211,6 +217,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const shutdown = async () => {
     if (stopping) return;
     stopping = true;
+    console.log(`Isolation metrics: ${JSON.stringify(gateway.isolationMetrics)}`);
     gateway.closeAllConnections();
     gateway.close();
     await pool.close();
