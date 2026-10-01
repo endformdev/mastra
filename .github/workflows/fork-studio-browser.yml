@@ -9,18 +9,15 @@ permissions: {}
 
 jobs:
   e2e-kitchen-sink:
-    name: Endform kitchen-sink (${{ matrix.shard }}/${{ strategy.job-total }})
+    name: Endform kitchen-sink
     runs-on: ubuntu-24.04
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
     permissions:
       contents: read
       id-token: write
     env:
       TURBO_CACHE: local:rw
+      E2E_APP_POOL_SIZE: '8'
 
     steps:
       - name: Checkout repo
@@ -54,14 +51,17 @@ jobs:
         working-directory: ./packages/playground
         run: pnpm install --dir ./e2e/kitchen-sink --frozen-lockfile
 
+      - name: Verify application isolation
+        run: node --test packages/playground/e2e/isolation-server.test.mjs
+
       - name: Test E2E
         working-directory: ./packages/playground/e2e
-        run: npx endform@latest test --organization-id 2G1ZCj7X --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        run: npx endform@latest test --organization-id 2G1ZCj7X
 
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: studio-endform-${{ matrix.shard }}
+          name: studio-endform
           path: packages/playground/test-results/
           if-no-files-found: ignore

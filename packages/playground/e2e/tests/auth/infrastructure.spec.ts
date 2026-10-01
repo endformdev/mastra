@@ -10,7 +10,7 @@
  * - Auth fixtures provide correct permission data
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../__utils__/test';
 import {
   setupMockAuth,
   setupAdminAuth,

@@ -1,6 +1,6 @@
 import type { MastraClient } from '@mastra/client-js';
 import type { Page } from '@playwright/test';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../__utils__/test';
 import { mockTraceQueryCapabilities } from '../__utils__/mock-trace-query-capabilities';
 import { resetStorage } from '../__utils__/reset-storage';
 

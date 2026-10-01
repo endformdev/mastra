@@ -1,0 +1,43 @@
+import { randomUUID } from 'node:crypto';
+import { test as base } from '@playwright/test';
+
+const BASE_URL = `http://localhost:${process.env.E2E_PORT || '4111'}`;
+const SESSION_HEADER = 'x-mastra-e2e-session';
+const SESSION_ANNOTATION = 'mastra-e2e-session';
+
+// Node fetch helpers and browser/APIRequestContext traffic must use the same lease.
+// Resolve the annotation per call rather than storing mutable process-wide test state.
+const originalFetch = globalThis.fetch;
+globalThis.fetch = (input, init) => {
+  const url = new URL(input instanceof Request ? input.url : String(input));
+  if (url.origin !== BASE_URL || url.pathname.startsWith('/__e2e/')) return originalFetch(input, init);
+  const session = base.info().annotations.find(annotation => annotation.type === SESSION_ANNOTATION)?.description;
+  if (!session) throw new Error('Kitchen-sink request made without an isolated test session');
+  const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
+  headers.set(SESSION_HEADER, session);
+  return originalFetch(input, { ...init, headers });
+};
+
+export const test = base.extend<{ isolatedSession: string }>({
+  isolatedSession: [
+    async ({}, use, testInfo) => {
+      const session = randomUUID();
+      const headers = { [SESSION_HEADER]: session };
+      const response = await originalFetch(`${BASE_URL}/__e2e/lease`, { method: 'POST', headers });
+      if (!response.ok) throw new Error(`Could not lease kitchen-sink: ${response.status}`);
+      testInfo.annotations.push({ type: SESSION_ANNOTATION, description: session });
+      try {
+        await use(session);
+      } finally {
+        const release = await originalFetch(`${BASE_URL}/__e2e/lease`, { method: 'DELETE', headers });
+        if (!release.ok) throw new Error(`Could not reset kitchen-sink: ${release.status}`);
+      }
+    },
+    { auto: true },
+  ],
+  extraHTTPHeaders: async ({ isolatedSession, extraHTTPHeaders }, use) => {
+    await use({ ...extraHTTPHeaders, [SESSION_HEADER]: isolatedSession });
+  },
+});
+
+export { expect } from '@playwright/test';

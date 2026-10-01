@@ -2,8 +2,7 @@ import { defineEndformConfig } from 'endform';
 
 export default defineEndformConfig({
   // ARIA snapshots are read from disk rather than imported by the specs.
-  additionalFiles: ['tests/**/*.aria.yml'],
-  // Tests clear the whole kitchen-sink database, so each application must serve
-  // one test at a time. CI retains four disjoint shards with isolated servers.
-  concurrentTestLimits: [{ scope: 'within-suite-run', limit: 1 }],
+  additionalFiles: ['tests/**/*.aria.yml', '../tsconfig.json'],
+  // Each test leases an isolated application; Endform schedules the whole suite.
+  concurrentTestLimits: [{ scope: 'within-suite-run', limit: Number(process.env.E2E_APP_POOL_SIZE || 4) }],
 });

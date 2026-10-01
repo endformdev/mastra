@@ -7,22 +7,14 @@ const webservers: PlaywrightTestConfig['webServer'] = [
   {
     // UI tests use route interception for auth mocking - no server auth needed
     // Server-side permission tests are in server-adapters/hono
-    command: `pnpm -C ./kitchen-sink dev`,
-    url: `http://localhost:4111`,
+    command: 'node ./isolation-server.mjs',
+    url: `${BASE_URL}/__e2e/health`,
     timeout: 120_000,
   },
 ];
 
-if (PORT) {
-  webservers.push({
-    command: `echo "App is running on :${PORT}"`,
-    url: `http://localhost:${PORT}`,
-    timeout: 120_000,
-    reuseExistingServer: true,
-  });
-}
-
 export default defineConfig({
+  tsconfig: '../tsconfig.json',
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

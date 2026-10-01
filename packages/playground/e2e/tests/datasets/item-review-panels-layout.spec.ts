@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../__utils__/test';
 import type { Locator, Page } from '@playwright/test';
 import { longPanelItems, longPanelResults, mockPanelRequests } from './__tests__/fixtures/item-review-panels';
 

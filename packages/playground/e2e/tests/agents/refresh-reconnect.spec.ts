@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../__utils__/test';
 
 const chatPath = '/agents/weather-agent/threads/new';
 const agentDetails = /\/api\/agents\/weather-agent(?:\?.*)?$/;
