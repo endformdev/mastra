@@ -28,26 +28,29 @@ through Endform's proxy to the application's port, without a gateway forwarding
 hop. Explicit browser contexts in streaming/IME journeys use the same slot.
 The existing MCP server call to localhost:4111 is mapped back to its own slot.
 
-After an attempt, the application process stops, its database and source tree
-are recreated, and it restarts before reuse. A failed reset removes the slot
-from circulation. A crashed remote attempt's lease expires after three minutes.
+With `E2E_WARM_APPS=true`, successful ordinary tests return their slot after
+running the native storage-reset endpoint. The application stays warm, matching
+the native suite's reuse between tests. Failed attempts, filesystem cases,
+workflow journeys, agent-builder journeys and CMS agent journeys stop the process,
+restore its source/database, and restart before reuse. `E2E_WARM_APPS=false`
+restarts every attempt. A failed reset removes the slot from circulation. A
+crashed remote attempt's lease expires after three minutes and is restarted.
 The fixture has a separate 60-second infrastructure budget; assertions, journey
 timeouts, skip declarations and retries remain unchanged.
 
 Tune host capacity and scheduling together:
 
 ```sh
-E2E_APP_POOL_SIZE=16 E2E_CONCURRENCY=16 E2E_STREAMING_CONCURRENCY=12 \
+E2E_WARM_APPS=true E2E_APP_POOL_SIZE=16 E2E_CONCURRENCY=16 E2E_STREAMING_CONCURRENCY=12 \
   pnpm --filter @internal/playground test:e2e:endform
 ```
 
 Defaults are eight applications, eight concurrent tests and a streaming cap of
-12 (which has no additional effect when the total limit is eight). Increasing
-Endform concurrency beyond local application capacity queues leases rather than
-creating more applications. All matching native Endform concurrency limits apply.
+12 (which has no additional effect when the total limit is eight). The effective Endform limit is capped at local application capacity; increasing
+the requested concurrency does not create additional applications. All matching native Endform concurrency limits apply.
 The single filesystem case remains tagged with limit one; it adds no restriction
 beyond that case being the only one with the tag. CI's manual workflow exposes
-application, total and streaming limits as inputs for measured experiments.
+application, total and streaming limits, plus warm reuse, as inputs for measured experiments.
 
 The native runner remains available as `test:e2e:playwright`, with its original
 shared development server and one worker, including the separate Studio
@@ -67,3 +70,9 @@ and concurrency together. Local Mac results are not an equivalent benchmark to
 four-core GitHub-hosted CI. Every full-suite run must account for all 335 cases,
 including the existing skips; a focused passing probe is not suite success.
 GitHub CI authenticates with job-scoped OIDC; no API key is added.
+
+Proxy transport and asset-cache probes did not establish an improvement. The
+final setup uses HTTP host interception without an additional raw-port tunnel or
+remote Studio cache. Failed experimental variants are recorded with the fork PR.
+Completed proxy runs have not met the sub-five-minute target; performance and
+reliability require further work rather than weakening assertions or retries.

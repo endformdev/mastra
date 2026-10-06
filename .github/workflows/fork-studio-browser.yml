@@ -14,6 +14,9 @@ on:
       streaming_concurrency:
         description: 'Endform streaming test limit'
         default: '12'
+      warm_apps:
+        description: 'Reuse successful ordinary applications with storage resets'
+        default: 'true'
 
 permissions: {}
 
@@ -30,6 +33,7 @@ jobs:
       E2E_APP_POOL_SIZE: ${{ inputs.app_pool_size || '8' }}
       E2E_CONCURRENCY: ${{ inputs.concurrency || '8' }}
       E2E_STREAMING_CONCURRENCY: ${{ inputs.streaming_concurrency || '12' }}
+      E2E_WARM_APPS: ${{ inputs.warm_apps || 'true' }}
 
     steps:
       - name: Checkout repo

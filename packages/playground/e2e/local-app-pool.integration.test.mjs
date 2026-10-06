@@ -63,3 +63,41 @@ test('local native entrypoints isolate database/source writes and expose CLI pac
   assert.equal((await release('c')).status, 200);
   assert.equal((await release('b')).status, 200);
 });
+
+test('warm reuse clears its database without restarting, while a requested restart restores source', async t => {
+  const previous = process.env.E2E_WARM_APPS;
+  process.env.E2E_WARM_APPS = 'true';
+  const pool = await startLocalApps({
+    size: 1,
+    port: 49251,
+    generate: false,
+    kitchenSink: join(dirname(fileURLToPath(import.meta.url)), 'kitchen-sink'),
+  });
+  t.after(async () => {
+    await pool.close();
+    if (previous === undefined) delete process.env.E2E_WARM_APPS;
+    else process.env.E2E_WARM_APPS = previous;
+  });
+  const app = pool.apps[0];
+  const pid = app.child.pid;
+  const origin = `http://localhost:${app.port}`;
+  assert.equal(
+    (
+      await fetch(`${origin}/e2e/seed-thread`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ threadId: 'warm-proof', count: 2 }),
+      })
+    ).status,
+    201,
+  );
+  await app.reset(false);
+  assert.equal(app.child.pid, pid);
+  assert.equal((await fetch(`${origin}/api/memory/threads/warm-proof/messages?agentId=weather-agent`)).status, 404);
+  const directory = dirname(dirname(dirname(app.child.spawnargs[2])));
+  const source = join(directory, 'src/mastra/reset-proof.json');
+  await writeFile(source, '{"changed":true}');
+  await app.reset(true);
+  assert.notEqual(app.child.pid, pid);
+  await assert.rejects(access(source));
+});

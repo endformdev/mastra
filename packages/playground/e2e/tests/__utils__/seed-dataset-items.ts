@@ -1,5 +1,4 @@
-const PORT = process.env.E2E_PORT || '4111';
-const BASE_URL = `http://localhost:${PORT}`;
+import { testOrigin } from './test-origin';
 
 export interface SeededDataset {
   id: string;
@@ -15,7 +14,7 @@ export const seedDatasetWithItems = async (
   itemCount: number,
   datasetName = 'E2E Items Dataset',
 ): Promise<SeededDataset> => {
-  const datasetRes = await fetch(`${BASE_URL}/api/datasets`, {
+  const datasetRes = await fetch(`${testOrigin()}/api/datasets`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ name: datasetName }),
@@ -32,7 +31,7 @@ export const seedDatasetWithItems = async (
     groundTruth: `Expected output ${i + 1}`,
   }));
 
-  const itemsRes = await fetch(`${BASE_URL}/api/datasets/${dataset.id}/items/batch`, {
+  const itemsRes = await fetch(`${testOrigin()}/api/datasets/${dataset.id}/items/batch`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ items }),

@@ -10,7 +10,16 @@ export function createLeaseServer(apps, { leaseMilliseconds = 180_000 } = {}) {
   const available = [...apps];
   const sessions = new Map();
   const waiting = [];
-  const metrics = { leases: 0, maxActive: 0, resets: 0, resetMilliseconds: 0, expired: 0, resetFailures: 0 };
+  const metrics = {
+    leases: 0,
+    maxActive: 0,
+    resets: 0,
+    resetMilliseconds: 0,
+    expired: 0,
+    resetFailures: 0,
+    warmResets: 0,
+    restartResets: 0,
+  };
   let closing = false;
   const returnApp = app => {
     if (closing) return;
@@ -18,10 +27,12 @@ export function createLeaseServer(apps, { leaseMilliseconds = 180_000 } = {}) {
     if (pending) pending.allocate(app);
     else available.push(app);
   };
-  const reset = async app => {
+  const reset = async (app, forceRestart = true) => {
     const started = Date.now();
     try {
-      await app.reset();
+      const kind = await app.reset(forceRestart);
+      if (kind === 'warm') metrics.warmResets++;
+      else metrics.restartResets++;
       metrics.resets++;
       metrics.resetMilliseconds += Date.now() - started;
       returnApp(app);
@@ -66,7 +77,7 @@ export function createLeaseServer(apps, { leaseMilliseconds = 180_000 } = {}) {
       if (!session) return send(404, { error: 'Unknown session' });
       sessions.delete(id);
       try {
-        await reset(session.app);
+        await reset(session.app, req.headers['x-mastra-e2e-restart'] !== 'false');
         send(200, { released: true });
       } catch (error) {
         send(500, { error: `Application reset failed: ${error.message}` });
@@ -126,21 +137,23 @@ async function ready(port, child) {
   throw new Error(`Application on :${port} did not become ready`);
 }
 
-export async function startLocalApps({ size, port = 4111, kitchenSink }) {
+export async function startLocalApps({ size, port = 4111, kitchenSink, generate = true }) {
   const root = await mkdtemp(join(tmpdir(), 'mastra-local-pool-'));
   const apps = [];
   let template;
   try {
     // Generate exactly the entrypoint and package metadata used by native CI.
-    template = spawn('pnpm', ['dev'], {
-      cwd: kitchenSink,
-      detached: true,
-      env: { ...process.env, PORT: String(port + 100) },
-      stdio: ['ignore', 'inherit', 'inherit'],
-    });
-    await ready(port + 100, template);
-    await stop(template, true);
-    template = undefined;
+    if (generate) {
+      template = spawn('pnpm', ['dev'], {
+        cwd: kitchenSink,
+        detached: true,
+        env: { ...process.env, PORT: String(port + 100) },
+        stdio: ['ignore', 'inherit', 'inherit'],
+      });
+      await ready(port + 100, template);
+      await stop(template, true);
+      template = undefined;
+    }
     const generated = join(kitchenSink, '.mastra/output');
     const prepare = async index => {
       const directory = join(root, String(index));
@@ -158,7 +171,20 @@ export async function startLocalApps({ size, port = 4111, kitchenSink }) {
       await cp(join(kitchenSink, '.mastra/mastra-packages.json'), packagesFile);
       const app = { port: port + 1000 + index, child: undefined };
       const publicDir = join(directory, 'src/mastra/public');
-      app.reset = async () => {
+      app.reset = async (forceRestart = true) => {
+        if (
+          process.env.E2E_WARM_APPS === 'true' &&
+          !forceRestart &&
+          app.child?.exitCode === null &&
+          app.child.signalCode === null
+        ) {
+          const response = await fetch(`http://127.0.0.1:${app.port}/e2e/reset-storage`, {
+            method: 'POST',
+            signal: AbortSignal.timeout(20_000),
+          });
+          if (!response.ok) throw new Error(`Storage reset failed: ${response.status}`);
+          return 'warm';
+        }
         await stop(app.child);
         await rm(join(directory, 'src'), { recursive: true, force: true });
         await cp(join(kitchenSink, 'src'), join(directory, 'src'), {
@@ -185,6 +211,7 @@ export async function startLocalApps({ size, port = 4111, kitchenSink }) {
           },
         );
         await ready(app.port, app.child);
+        return 'restart';
       };
       apps.push(app);
       await app.reset();
@@ -219,12 +246,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   });
   const leases = createLeaseServer(pool.apps);
   await new Promise(resolve => leases.listen(port, '127.0.0.1', resolve));
-  console.log(`Local applications ready: ${size}, control port ${port}`);
+  console.error(`Local applications ready: ${size}, control port ${port}`);
   let stopping = false;
   const shutdown = async () => {
     if (stopping) return;
     stopping = true;
-    console.log(`Local application metrics: ${JSON.stringify(leases.isolationMetrics)}`);
+    console.error(`Local application metrics: ${JSON.stringify(leases.isolationMetrics)}`);
     leases.closeAllConnections();
     await new Promise(resolve => leases.close(resolve));
     await pool.close();

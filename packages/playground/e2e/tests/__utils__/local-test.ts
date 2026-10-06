@@ -35,7 +35,14 @@ export const localTest = base.extend<{ appLease: string }>({
         await use(baseURL);
       } finally {
         browser.newContext = newContext;
-        const released = await originalFetch(`${CONTROL_URL}/__e2e/lease`, { method: 'DELETE', headers });
+        const requiresFreshProcess =
+          testInfo.status !== testInfo.expectedStatus ||
+          testInfo.tags.includes('@filesystem') ||
+          /\/(workflows|agent-builder|cms\/agents)\//.test(testInfo.file);
+        const released = await originalFetch(`${CONTROL_URL}/__e2e/lease`, {
+          method: 'DELETE',
+          headers: { ...headers, 'x-mastra-e2e-restart': String(requiresFreshProcess) },
+        });
         if (!released.ok) throw new Error(`Application reset failed: ${released.status}`);
       }
     },
