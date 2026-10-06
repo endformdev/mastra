@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../__utils__/test';
 import { resetStorage, seedDatasetWithItems } from '../__utils__';
 
 const PORT = process.env.E2E_PORT || '4111';

@@ -1,5 +1,4 @@
-const PORT = process.env.E2E_PORT || '4111';
-const BASE_URL = `http://localhost:${PORT}`;
+import { testOrigin } from './test-origin';
 
 /**
  * Seeds datasets via the Studio API. Returns the names created.
@@ -10,7 +9,7 @@ export const seedDatasets = async (count: number, namePrefix = 'E2E Dataset'): P
   const names: string[] = [];
   for (let i = 0; i < count; i++) {
     const name = `${namePrefix} ${String(i + 1).padStart(2, '0')}`;
-    const res = await fetch(`${BASE_URL}/api/datasets`, {
+    const res = await fetch(`${testOrigin()}/api/datasets`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ name }),

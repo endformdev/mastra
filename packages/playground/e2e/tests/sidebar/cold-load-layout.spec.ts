@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../__utils__/test';
 import { buildAuthCapabilities, buildCurrentUserResponse } from '../__utils__/auth';
 import type { MockAuthConfig } from '../__utils__/auth';
 import { resetStorage } from '../__utils__/reset-storage';

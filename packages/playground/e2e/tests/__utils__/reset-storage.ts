@@ -1,8 +1,7 @@
-const PORT = process.env.E2E_PORT || '4111';
-const BASE_URL = `http://localhost:${PORT}`;
+import { testOrigin } from './test-origin';
 
 export const resetStorage = async () => {
-  return fetch(`${BASE_URL}/e2e/reset-storage`, {
+  return fetch(`${testOrigin()}/e2e/reset-storage`, {
     method: 'POST',
   }).then(res => {
     if (!res.ok) {

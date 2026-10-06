@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../__utils__/test';
 import { traceQueryPage } from '../../../src/pages/traces/__tests__/fixtures/trace-query';
 import { mockTraceQueryCapabilities } from '../__utils__/mock-trace-query-capabilities';
 

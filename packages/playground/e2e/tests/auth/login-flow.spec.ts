@@ -11,7 +11,7 @@
  * - Login state reflected in UI (user avatar, name display)
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../__utils__/test';
 import { setupMockAuth, setupUnauthenticated, setupAdminAuth, clearMockAuth } from '../__utils__/auth';
 import { resetStorage } from '../__utils__/reset-storage';
 import { expectCurrentBreadcrumb } from '../__utils__/route-header';

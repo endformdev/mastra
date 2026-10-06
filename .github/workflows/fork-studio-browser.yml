@@ -4,22 +4,36 @@ on:
   pull_request:
     branches: [main, 'codex/mastra-playwright-baseline']
   workflow_dispatch:
+    inputs:
+      app_pool_size:
+        description: 'Local applications on the CI host'
+        default: '8'
+      concurrency:
+        description: 'Endform concurrent test limit'
+        default: '8'
+      streaming_concurrency:
+        description: 'Endform streaming test limit'
+        default: '12'
+      warm_apps:
+        description: 'Reuse successful ordinary applications with storage resets'
+        default: 'true'
 
 permissions: {}
 
 jobs:
   e2e-kitchen-sink:
-    name: E2E kitchen-sink (${{ matrix.shard }}/${{ strategy.job-total }})
+    name: Endform kitchen-sink
     runs-on: ubuntu-24.04
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
     permissions:
       contents: read
+      id-token: write
     env:
       TURBO_CACHE: local:rw
+      E2E_APP_POOL_SIZE: ${{ inputs.app_pool_size || '8' }}
+      E2E_CONCURRENCY: ${{ inputs.concurrency || '8' }}
+      E2E_STREAMING_CONCURRENCY: ${{ inputs.streaming_concurrency || '12' }}
+      E2E_WARM_APPS: ${{ inputs.warm_apps || 'true' }}
 
     steps:
       - name: Checkout repo
@@ -51,17 +65,19 @@ jobs:
 
       - name: Setup e2e project dependencies
         working-directory: ./packages/playground
-        run: pnpm test:e2e:setup
+        run: pnpm install --dir ./e2e/kitchen-sink --frozen-lockfile
+
+      - name: Verify local application isolation
+        run: node --test packages/playground/e2e/local-app-pool.test.mjs packages/playground/e2e/local-app-pool.integration.test.mjs
 
       - name: Test E2E
         working-directory: ./packages/playground
-        run: pnpm exec playwright test -c e2e/playwright.config.ts --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        run: pnpm test:e2e:endform
 
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: studio-playwright-${{ matrix.shard }}
+          name: studio-endform
           path: packages/playground/test-results/
           if-no-files-found: ignore
-
