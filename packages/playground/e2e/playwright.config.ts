@@ -44,5 +44,8 @@ export default defineConfig({
     },
   ],
 
-  webServer: process.env.E2E_REMOTE_APP === 'true' ? undefined : webservers,
+  webServer:
+    process.env.E2E_LOCAL_APP === 'true'
+      ? [{ command: 'node ./local-app-pool.mjs', url: `${BASE_URL}/__e2e/health`, timeout: 180_000 }]
+      : webservers,
 });

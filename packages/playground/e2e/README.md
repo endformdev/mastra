@@ -1,56 +1,69 @@
 # Studio browser tests on Endform
 
-After building the workspace dependencies, run:
+Build the relevant workspace dependencies, then run:
 
 ```sh
 pnpm --filter @internal/playground test:e2e
 ```
 
-This installs the kitchen-sink dependencies, generates Studio assets once using
-its supported `mastra dev` command, and runs one Endform command for the existing
-335 Chromium tests. Endform supplies the browsers. CI uses the same path after
-its workspace build and frozen fixture installation; there is no shard matrix.
-`test:e2e:endform` skips the dependency installation.
+The command installs kitchen-sink dependencies and runs the existing 335 Chromium
+cases once on Endform. All applications run locally on the machine running the
+CLI. Endform provides the remote browsers and proxies HTTP, streaming and
+WebSocket traffic back to the assigned local ports. There is no CI shard matrix.
 
-Each Endform test runs on its own remote machine. The automatic fixture in
-`tests/__utils__/remote-test.ts` starts the existing kitchen-sink application using
-Mastra's Node server and the same agents, tools, storage and workflow definitions.
-It gives that attempt a temporary database directory and source tree. Browser,
-API request context and Node fetch traffic stays on that machine's localhost.
-The server, storage and temporary files are cleaned up after the attempt.
-Retries run in fresh Playwright workers. The application starts before test hooks
-and has a separate 60-second infrastructure budget; existing test bodies,
-assertions, assertion timeouts and retry policy remain unchanged.
+The local application pool starts the supported `mastra dev` command once to
+produce the native generated entrypoint, Studio assets and package metadata.
+Each pool slot runs that entrypoint in a separate Node process, with its own
+source tree and database working directory. Studio assets are immutable and
+shared locally. Application configuration, Node environment and runtime directory
+layout follow the native CLI startup path. Nothing starts an application inside
+the remote Playwright worker, and Studio/server dependencies are not transferred
+to remote machines.
 
-The default Endform concurrency limit is 20. Override it for experiments with:
+The automatic fixture leases a slot for the whole attempt, including test hooks.
+Browser and API request contexts use the slot's base URL. Existing Node fetch
+helpers targeting the configured test origin are redirected to the same slot.
+The control server only allocates leases; application traffic goes directly
+through Endform's proxy to the application's port, without a gateway forwarding
+hop. Explicit browser contexts in streaming/IME journeys use the same slot.
+The existing MCP server call to localhost:4111 is mapped back to its own slot.
+
+After an attempt, the application process stops, its database and source tree
+are recreated, and it restarts before reuse. A failed reset removes the slot
+from circulation. A crashed remote attempt's lease expires after three minutes.
+The fixture has a separate 60-second infrastructure budget; assertions, journey
+timeouts, skip declarations and retries remain unchanged.
+
+Tune host capacity and scheduling together:
 
 ```sh
-E2E_CONCURRENCY=40 pnpm --filter @internal/playground test:e2e:endform
+E2E_APP_POOL_SIZE=16 E2E_CONCURRENCY=16 E2E_STREAMING_CONCURRENCY=12 \
+  pnpm --filter @internal/playground test:e2e:endform
 ```
 
-`concurrentTestLimits` also caps `@streaming` tests at four concurrent attempts
-and the single `@filesystem` test at one. All matching limits apply; these are
-scheduling limits, not test filters. The filesystem cap currently adds no extra
-restriction because only one test has that tag. Limits apply within each suite
-run because applications are isolated across runs too.
+Defaults are eight applications, eight concurrent tests and a streaming cap of
+12 (which has no additional effect when the total limit is eight). Increasing
+Endform concurrency beyond local application capacity queues leases rather than
+creating more applications. All matching native Endform concurrency limits apply.
+The single filesystem case remains tagged with limit one; it adds no restriction
+beyond that case being the only one with the tag. CI's manual workflow exposes
+application, total and streaming limits as inputs for measured experiments.
 
-The native runner is available as `test:e2e:playwright`, including its separate
-Studio base-path test, which is outside this benchmark. It uses the original
-shared development server and one Playwright worker. `test:e2e:ui` and the other
-native debugging scripts remain available. The common fixture chooses the
-remote application only when `E2E_REMOTE_APP=true`, set by the Endform script.
+The native runner remains available as `test:e2e:playwright`, with its original
+shared development server and one worker, including the separate Studio
+base-path test outside this benchmark. Native UI/debugging scripts are preserved.
+The common fixture chooses local leases only when `E2E_LOCAL_APP=true`, set by
+the Endform script. Remote fixture alias imports use the explicit playground
+tsconfig; runtime ARIA snapshots and tsconfig are transferred separately.
 
-Playwright explicitly uses the playground `tsconfig.json` so imported fixtures
-retain their `@/*` mappings on remote runners. Endform transfers imports and
-directly referenced environment variables automatically. ARIA snapshots,
-`tsconfig.json` and generated Studio assets are transferred explicitly because
-these are runtime file reads. There is no broad environment capture or API key.
-The fork CI job authenticates through GitHub OIDC.
+Check real state isolation before browser experiments:
 
-Full-suite experiments compared a shared CI application pool of 8 and 16
-instances with applications on Endform runners. The pool saturated the CI host
-and was removed from the final setup. Runner-local execution reduced measured
-feedback time, but completed runs still contain assertion and timing failures.
-Those failures stay visible; this is not a passing migration yet. See the fork
-PR for exact commits, completed runs, outcomes and timing comparisons. Do not
-use a smaller passing subset to represent the full suite.
+```sh
+node --test local-app-pool.test.mjs local-app-pool.integration.test.mjs
+```
+
+Report application preparation, test-stage wall time, outcomes, host CPU/memory
+and concurrency together. Local Mac results are not an equivalent benchmark to
+four-core GitHub-hosted CI. Every full-suite run must account for all 335 cases,
+including the existing skips; a focused passing probe is not suite success.
+GitHub CI authenticates with job-scoped OIDC; no API key is added.

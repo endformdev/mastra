@@ -38,7 +38,7 @@
     "test:mutate": "stryker run --mutate",
     "test:run": "vitest run",
     "test:e2e": "pnpm install --dir ./e2e/kitchen-sink --frozen-lockfile && pnpm test:e2e:endform",
-    "test:e2e:endform": "cd e2e && node prepare-remote-app.mjs && E2E_REMOTE_APP=true npx endform@latest test --organization-id 2G1ZCj7X",
+    "test:e2e:endform": "cd e2e && E2E_LOCAL_APP=true npx endform@latest test --organization-id 2G1ZCj7X",
     "test:e2e:playwright": "pnpm test:e2e:setup && playwright test -c e2e/playwright.config.ts && playwright test -c e2e/playwright.studio-base.config.ts",
     "test:e2e:studio-base": "pnpm test:e2e:setup && playwright test -c e2e/playwright.studio-base.config.ts",
     "test:e2e:ui": "pnpm test:e2e:setup && playwright test -c e2e/playwright.config.ts --ui",

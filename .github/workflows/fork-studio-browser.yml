@@ -4,6 +4,16 @@ on:
   pull_request:
     branches: [main, 'codex/mastra-playwright-baseline']
   workflow_dispatch:
+    inputs:
+      app_pool_size:
+        description: 'Local applications on the CI host'
+        default: '8'
+      concurrency:
+        description: 'Endform concurrent test limit'
+        default: '8'
+      streaming_concurrency:
+        description: 'Endform streaming test limit'
+        default: '12'
 
 permissions: {}
 
@@ -17,7 +27,9 @@ jobs:
       id-token: write
     env:
       TURBO_CACHE: local:rw
-      E2E_CONCURRENCY: '20'
+      E2E_APP_POOL_SIZE: ${{ inputs.app_pool_size || '8' }}
+      E2E_CONCURRENCY: ${{ inputs.concurrency || '8' }}
+      E2E_STREAMING_CONCURRENCY: ${{ inputs.streaming_concurrency || '12' }}
 
     steps:
       - name: Checkout repo
@@ -50,6 +62,9 @@ jobs:
       - name: Setup e2e project dependencies
         working-directory: ./packages/playground
         run: pnpm install --dir ./e2e/kitchen-sink --frozen-lockfile
+
+      - name: Verify local application isolation
+        run: node --test packages/playground/e2e/local-app-pool.test.mjs packages/playground/e2e/local-app-pool.integration.test.mjs
 
       - name: Test E2E
         working-directory: ./packages/playground
